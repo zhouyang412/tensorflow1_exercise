@@ -161,10 +161,12 @@ class TextCNN(object):
                 init_mat = tf.random_uniform([self.config.vocab_size, self.config.hidden_dim], -1, 1)
                 embedding = tf.Variable(init_mat, trainable=True, name="emb", dtype=tf.float32)
             inputs_emb = tf.nn.embedding_lookup(embedding, self.input_x)
+            # [batch_size, seq_len, embed_dim] 
             inputs_emb = tf.contrib.layers.dropout(inputs_emb, self.config.dropout_keep_prob)
             
         with tf.name_scope("convs"):
             convs = []
+            # [batch_size, conv_dim, num_filters]
             for kernel_size in self.config.kernel_size:
                 conv = tf.layers.conv1d(inputs_emb, 
                                         self.config.num_filters, 
@@ -180,7 +182,7 @@ class TextCNN(object):
                 max_pool_res = tf.reduce_mean(conv_res, reduction_indices=[1])
                 pool_reses.append(avg_pool_res)
                 pool_reses.append(max_pool_res)
-                
+            # [batch_size, num_filter * len(kernel_size)]
             pooling_outputs = tf.concat(pool_reses, 1)
                 
         with tf.name_scope("linear"):
@@ -194,6 +196,7 @@ class TextCNN(object):
             self.y_pred = tf.argmax(self.logits_outputs, axis=1)
             
         with tf.name_scope("loss"):
+            # loss计算
             self.labels_onehot = tf.one_hot(self.input_y, depth=self.config.num_classes)
             cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.labels_onehot, 
                                                             logits=self.logits) # label_smoothing=0.001
@@ -213,9 +216,12 @@ class TextCNN(object):
             self.cur_f1 = 2 * self.cur_precision * self.cur_recall / (self.cur_precision + self.cur_recall)
         
         with tf.name_scope("new_lr"):
+            # 更新learning_rate
             self.new_lr = tf.placeholder(tf.float32, shape=[])
             self.lr_update = tf.assign(self.learning_rate, self.new_lr)
         self.test = (self.train_op, self.loss)    
+    
     def assign_lr(self, sess, lr_value):
         sess.run(self.lr_update, feed_dict={self.new_lr: lr_value})
+                
         
