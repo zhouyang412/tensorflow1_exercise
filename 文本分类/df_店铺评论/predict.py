@@ -8,7 +8,7 @@ import math
 def test_model(config, model, test_ids):
     
     # 读取数据 
-    test_loader = test_batch_iter(test_ids, rnn_config.test_batch_size)
+    test_loader = test_batch_iter(test_ids, config.test_batch_size)
     test_steps_fold = math.ceil(len(test_ids) / config.test_batch_size)
     df_result = pd.read_csv(config.sample_dir)
     
